@@ -1,0 +1,13 @@
+worker_processes  auto;
+pid  /var/run/nginx.pid;
+
+events {
+        use epoll;
+        worker_connections 1024;
+        multi_accept on;
+}
+
+server {
+        listen 8000;
+        root /app;
+}
