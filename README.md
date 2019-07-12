@@ -10,5 +10,5 @@ artemkrim Platform repository
 7) Создание docker image на основе alpine-nginx, push dockerhub
 8) Создание манифеста web-pod.yaml
 9) Добавление init контейнера в манифест
-10) Проброс порта 8000
+10) Проброс порта 8000 \
 Рузультат http://127.0.0.1:8000/index.html
