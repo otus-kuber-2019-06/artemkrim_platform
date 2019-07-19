@@ -1,6 +1,7 @@
 # artemkrim_platform
 artemkrim Platform repository
 
+ДЗ №1
 1) Установка kubectl
 2) Установка minikube
 3) Запуск minikube
@@ -12,3 +13,14 @@ artemkrim Platform repository
 9) Добавление init контейнера в манифест
 10) Проброс порта 8000 \
 Рузультат http://127.0.0.1:8000/index.html
+
+ДЗ №2
+1) создание sa bob с добавление в группу admin
+2) создание sa dave
+3) создание ns prometheus
+4) создание sa carol
+5) создание роли с правами на чтение всех подов
+6) добавление всех sa prometheus в созданную группу на чтение всех подов
+7) создание ns dev
+8) создание sa jane, права admin ns-dev
+9) создание sa ken, права view ns-dev
