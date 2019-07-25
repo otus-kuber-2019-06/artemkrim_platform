@@ -1,7 +1,7 @@
 # artemkrim_platform
 artemkrim Platform repository
 
-ДЗ №1
+ДЗ №1 kubernetes-intro
 1) Установка kubectl
 2) Установка minikube
 3) Запуск minikube
@@ -14,7 +14,7 @@ artemkrim Platform repository
 10) Проброс порта 8000 \
 Рузультат http://127.0.0.1:8000/index.html
 
-ДЗ №2
+ДЗ №2 kubernetes-security
 1) создание sa bob с добавление в группу admin
 2) создание sa dave
 3) создание ns prometheus
@@ -24,3 +24,11 @@ artemkrim Platform repository
 7) создание ns dev
 8) создание sa jane, права admin ns-dev
 9) создание sa ken, права view ns-dev
+
+ДЗ #3 kubernetes-networks
+
+ДЗ №4 kubernetes-volumes
+1) Установлен kind
+2) Создан StatefulSet minio
+3) Coздан headless сервис для minio
+4) Создан secret, содержащий access_key и secret_key | base64
