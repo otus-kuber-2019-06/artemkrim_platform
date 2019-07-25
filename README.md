@@ -15,7 +15,7 @@ artemkrim Platform repository
 Рузультат http://127.0.0.1:8000/index.html
 
 ДЗ №2 kubernetes-security
-1) создание sa bob с добавление в группу admin
+1) Создание sa bob с добавление в группу admin
 2) создание sa dave
 3) создание ns prometheus
 4) создание sa carol
