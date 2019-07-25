@@ -16,14 +16,14 @@ artemkrim Platform repository
 
 ДЗ №2 kubernetes-security
 1) Создание sa bob с добавление в группу admin
-2) создание sa dave
-3) создание ns prometheus
-4) создание sa carol
-5) создание роли с правами на чтение всех подов
-6) добавление всех sa prometheus в созданную группу на чтение всех подов
-7) создание ns dev
-8) создание sa jane, права admin ns-dev
-9) создание sa ken, права view ns-dev
+2) Создание sa dave
+3) Создание ns prometheus
+4) Создание sa carol
+5) Создание роли с правами на чтение всех подов
+6) Добавление всех sa prometheus в созданную группу на чтение всех подов
+7) Создание ns dev
+8) Создание sa jane, права admin ns-dev
+9) Создание sa ken, права view ns-dev
 
 ДЗ #3 kubernetes-networks
 
