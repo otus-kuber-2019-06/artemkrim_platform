@@ -25,7 +25,17 @@ artemkrim Platform repository
 8) Создание sa jane, права admin ns-dev
 9) Создание sa ken, права view ns-dev
 
-ДЗ #3 kubernetes-networks
+ДЗ №3 kubernetes-networks
+1) Добавление проверок web-pod
+2) Создание Deploymen web
+3) Создание Service web
+4) active ipvs
+5) apply metallb
+6) меняем ClusterIP на LoadBalancer
+7) kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
+8) создан ingress-lb
+9) создан Headless для web pods
+10) proxy ingress url /web
 
 ДЗ №4 kubernetes-volumes
 1) Установлен kind
