@@ -11,4 +11,4 @@ spec:
       - path: /web
         backend:
           serviceName: web-svc
-          servicePort: 8000
+          servicePort: 80
