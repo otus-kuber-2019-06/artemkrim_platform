@@ -42,3 +42,10 @@ artemkrim Platform repository
 2) Создан StatefulSet minio
 3) Coздан headless сервис для minio
 4) Создан secret, содержащий access_key и secret_key | base64
+
+ДЗ #4 kubernetes-storage
+https://github.com/kubernetes-csi/csi-driver-host-path
+1) install csi-driver-host-path deploy-hostpath.sh # check kubectl get pods | grep csi-hostpath
+2) create sc csi-hostpath-sc
+3) create pvc csi-pvc
+4) deploy pod 

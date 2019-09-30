@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: csi-pod
+spec:
+  containers:
+  - name: storage-pod
+    image: ubuntu
+    command: ["/bin/bash", "-ec", "while :; do sleep 2; done"]
+    volumeMounts:
+    - name: test-csi
+      mountPath: /data
+  volumes:
+  - name: test-csi
+    persistentVolumeClaim:
+      claimName: csi-pvc
