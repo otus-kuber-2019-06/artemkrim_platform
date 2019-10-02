@@ -51,7 +51,7 @@ https://github.com/kubernetes-csi/csi-driver-host-path
 4) deploy pod 
 
 ДЗ #5 kubernetes-debug
-1) Отредактировал в манифесте версию образа на latest, strace так и не завелся, установил из бинарников
+1) Отредактировал в манифесте версию образа на latest, strace так и не завелся, установил из бинарников \
 export PLUGIN_VERSION=0.1.1 
 curl -Lo kubectl-debug.tar.gz https://github.com/aylei/kubectl-debug/releases/download/v${PLUGIN_VERSION}/kubectl-debug_${PLUGIN_VERSION}_linux_amd64.tar.gz 
 tar -zxvf kubectl-debug.tar.gz kubectl-debug 
