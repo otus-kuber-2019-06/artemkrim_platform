@@ -57,12 +57,12 @@ curl -Lo kubectl-debug.tar.gz https://github.com/aylei/kubectl-debug/releases/do
 tar -zxvf kubectl-debug.tar.gz kubectl-debug \
 sudo mv kubectl-debug /usr/local/bin/\
 kubectl-debug POD -n=namespace --agentless\
-2) git clone https://github.com/piontec/netperf-operator\
+2) git clone https://github.com/piontec/netperf-operator \
 cd netperf-operator\
 kubectl create -f deploy/crd.yaml\
 kubectl create -f deploy/rbac.yaml\
 kubectl create -f deploy/operator.yaml\
 kubectl apply -f cr.yaml\
 kubectl describe netperf.app.example.com/example | grep Status\
-kubectl apply -f https://raw.githubusercontent.com/express42/otus-platform-snippets/master/Module-03/Debugging/netperf-calico-policy.yaml \
-3) Создание доступа для iptables-tailer, запуск ds\
+kubectl apply -f https://raw.githubusercontent.com/express42/otus-platform-snippets/master/Module-03/Debugging/netperf-calico-policy.yaml 
+3) Создание доступа для iptables-tailer, запуск ds
