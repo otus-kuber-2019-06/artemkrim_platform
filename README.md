@@ -56,7 +56,7 @@ export PLUGIN_VERSION=0.1.1 \
 curl -Lo kubectl-debug.tar.gz https://github.com/aylei/kubectl-debug/releases/download/v${PLUGIN_VERSION}/kubectl-debug_${PLUGIN_VERSION}_linux_amd64.tar.gz \
 tar -zxvf kubectl-debug.tar.gz kubectl-debug \
 sudo mv kubectl-debug /usr/local/bin/\
-kubectl-debug POD -n=namespace --agentless\
+kubectl-debug POD -n=namespace --agentless
 2) git clone https://github.com/piontec/netperf-operator \
 cd netperf-operator\
 kubectl create -f deploy/crd.yaml\
