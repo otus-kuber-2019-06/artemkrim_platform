@@ -105,7 +105,7 @@ root@m1:/home/smile# kubectl get jobs.batch
 NAME                         COMPLETIONS   DURATION   AGE
 backup-mysql-instance-job    1/1           3s         72s
 
-4) проверяем
+4) применяем манифест cr, проверяем
 +----+-------------+
 | id | name        |
 +----+-------------+
