@@ -69,11 +69,11 @@ kubectl apply -f https://raw.githubusercontent.com/express42/otus-platform-snipp
 
 ДЗ #7 kubernetes-operators
 1) применяем манифесты crd & cr 
-***
-root@m1:/home/smile# kubectl get pvc -A \
-NAMESPACE   NAME                        STATUS   VOLUME                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE\
-default     backup-mysql-instance-pvc   Bound    backup-mysql-instance-pv   1Gi        RWO                           5s\
-default     mysql-instance-pvc          Bound    mysql-instance-pv          1G         RWO                           5s\
+
+>root@m1:/home/smile# kubectl get pvc -A \
+>NAMESPACE   NAME                        STATUS   VOLUME                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE\
+>default     backup-mysql-instance-pvc   Bound    backup-mysql-instance-pv   1Gi        RWO                           5s\
+>default     mysql-instance-pvc          Bound    mysql-instance-pv          1G         RWO                           5s\
 
 2) заполняем бд
 
