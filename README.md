@@ -43,14 +43,14 @@ artemkrim Platform repository
 3) Coздан headless сервис для minio
 4) Создан secret, содержащий access_key и secret_key | base64
 
-ДЗ #4 kubernetes-storage
+ДЗ #5 kubernetes-storage
 https://github.com/kubernetes-csi/csi-driver-host-path
 1) install csi-driver-host-path deploy-hostpath.sh # check kubectl get pods | grep csi-hostpath
 2) create sc csi-hostpath-sc
 3) create pvc csi-pvc
 4) deploy pod 
 
-ДЗ #5 kubernetes-debug
+ДЗ #6 kubernetes-debug
 1) Отредактировал в манифесте версию образа на latest, strace так и не завелся, установил из бинарников \
 export PLUGIN_VERSION=0.1.1 \
 curl -Lo kubectl-debug.tar.gz https://github.com/aylei/kubectl-debug/releases/download/v${PLUGIN_VERSION}/kubectl-debug_${PLUGIN_VERSION}_linux_amd64.tar.gz \
@@ -66,3 +66,48 @@ kubectl apply -f cr.yaml\
 kubectl describe netperf.app.example.com/example | grep Status\
 kubectl apply -f https://raw.githubusercontent.com/express42/otus-platform-snippets/master/Module-03/Debugging/netperf-calico-policy.yaml 
 3) Создание доступа для iptables-tailer, запуск ds
+
+ДЗ #7 kubernetes-operators
+1) применяем манифесты crd & cr
+
+root@m1:/home/smile# kubectl get pvc -A
+NAMESPACE   NAME                        STATUS   VOLUME                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+default     backup-mysql-instance-pvc   Bound    backup-mysql-instance-pv   1Gi        RWO                           5s
+default     mysql-instance-pvc          Bound    mysql-instance-pv          1G         RWO                           5s
+
+2) заполняем бд
+
+root@m1:/home/smile# export MYSQLPOD=$(kubectl get pods -l app=mysql-instance -o jsonpath="{.items[*].metadata.name}")
+root@m1:/home/smile# kubectl exec -it $MYSQLPOD -- mysql -u root -potuspassword -e "CREATE TABLE test ( id smallint unsigned not null auto_increment, name varchar(20) not null, constraint pk_example primary key (id) );" otus-database
+mysql: [Warning] Using a password on the command line interface can be insecure.
+root@m1:/home/smile# kubectl exec -it $MYSQLPOD -- mysql -potuspassword -e "INSERT INTO test ( id, name ) VALUES ( null, 'some data' );" otus-database
+mysql: [Warning] Using a password on the command line interface can be insecure.
+root@m1:/home/smile# kubectl exec -it $MYSQLPOD -- mysql -potuspassword -e "INSERT INTO test ( id, name ) VALUES ( null, 'some data-2' );" otus-database
+mysql: [Warning] Using a password on the command line interface can be insecure.
+root@m1:/home/smile# kubectl exec -it $MYSQLPOD -- mysql -potuspassword -e "select * from test;" otus-database
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------+
+| id | name        |
++----+-------------+
+|  1 | some data   |
+|  2 | some data-2 |
++----+-------------+
+
+3) удаляем mysql-instance
+
+root@m1:/home/smile# kubectl delete mysqls.otus.homework mysql-instance
+mysql.otus.homework "mysql-instance" deleted
+root@m1:/home/smile# kubectl get pv
+NAME                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                               STORAGECLASS   REASON   AGE
+backup-mysql-instance-pv   1Gi        RWO            Retain           Bound    default/backup-mysql-instance-pvc                           14m
+root@m1:/home/smile# kubectl get jobs.batch
+NAME                         COMPLETIONS   DURATION   AGE
+backup-mysql-instance-job    1/1           3s         72s
+
+4) проверяем
++----+-------------+
+| id | name        |
++----+-------------+
+|  1 | some data   |
+|  2 | some data-2 |
++----+-------------+
