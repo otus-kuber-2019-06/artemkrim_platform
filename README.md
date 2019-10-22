@@ -68,8 +68,9 @@ kubectl apply -f https://raw.githubusercontent.com/express42/otus-platform-snipp
 3) Создание доступа для iptables-tailer, запуск ds
 
 ДЗ #7 kubernetes-operators
-1) применяем манифесты crd & cr 
 ```
+1) применяем манифесты crd & cr 
+
 root@m1:/home/smile# kubectl get pvc -A 
 NAMESPACE   NAME                        STATUS   VOLUME                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE\
 default     backup-mysql-instance-pvc   Bound    backup-mysql-instance-pv   1Gi        RWO                           5s\
