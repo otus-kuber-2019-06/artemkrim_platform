@@ -112,3 +112,44 @@ backup-mysql-instance-job    1/1           3s         72s
 |  1 | some data   |
 |  2 | some data-2 |
 +----+-------------+
+
+ДЗ #10 kubernetes-templating
+Кластер развернут с помощью kubespray \
+v1.16.0\
+3-master\
+2-worker\
+2-ingress(VRRP)\
+
+1) helm 2.14.3 установлен kubespray, инициализируем tiller
+kubectl apply -f tiller.yaml\
+helm init --service-account=tiller\
+2) устанавливаем nginx-ingress с помощью helm
+```
+helm install --name=nginx-ingress stable/nginx-ingress --version 1.24.2 \
+--namespace=ingress-nginx \
+--set controller.kind=DaemonSet \
+--set controller.service.type="" \
+--set controller.daemonset.useHostPort=true \
+--set controller.daemonset.hostPorts.http=80 \
+--set controller.daemonset.hostPorts.https=443 \
+--set controller.nodeSelector."node\.kubernetes\.io/ingress"="" \
+--set defaultBackend.nodeSelector."node\.kubernetes\.io/ingress"="" \
+--set defaultBackend.replicaCount=2
+3) устанавливаем cert-manager
+```
+kubectl create namespace cert-manager
+kubectl apply --validate=false -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.11/deploy/manifests/00-crds.yaml
+helm repo add jetstack https://charts.jetstack.io
+helm upgrade --install cert-manager jetstack/cert-manager --version=0.11.0 \
+--namespace=cert-manager \
+--set nodeSelector."node\.kubernetes\.io/ingress"=""
+kubectl apply -f ClusterIssuer.yaml
+4) устанавливаем плагин helm-tiller
+5) попробовали установить чарт в secret, затем в configMap
+export HELM_TILLER_STORAGE=configmap
+```
+helm tiller run \
+helm upgrade --install chartmuseum stable/chartmuseum --wait \
+--namespace=chartmuseum \
+--version=2.4.0 \
+-f values.yaml

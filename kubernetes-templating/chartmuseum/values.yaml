@@ -1,0 +1,12 @@
+---
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+    certmanager.io/cluster-issuer: "letsencrypt-staging"
+  hosts:
+    - name: chartmuseum.labash.ru
+      path: /
+      tls: true
+      tlsSecret: chartmuseum.labash.ru
