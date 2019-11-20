@@ -1,0 +1,17 @@
+---
+expose:
+  type: ingress
+  tls:
+    enabled: true
+    secretName: "harbor.labash.ru"
+  ingress:
+    hosts:
+      core: harbor.labash.ru
+    controller: default
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      kubernetes.io/tls-acme: "true"
+      certmanager.k8s.io/cluster-issuer: "letsencrypt-staging"
+      certmanager.k8s.io/acme-challenge-type: http01
+notary:
+  enabled: false
