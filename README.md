@@ -161,3 +161,4 @@ helm3 upgrade --install harbor harbor/harbor --wait \
 --namespace=harbor \
 --version=1.1.3 \
 -f values.yaml
+8) 
