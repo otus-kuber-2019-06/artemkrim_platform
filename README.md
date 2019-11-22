@@ -115,7 +115,7 @@ backup-mysql-instance-job    1/1           3s         72s
 
 ДЗ #10 kubernetes-templating
 Кластер развернут с помощью kubespray \
-v1.16.0\
+v1.16.2\
 3-master\
 2-worker\
 2-ingress(VRRP)\
@@ -161,4 +161,11 @@ helm3 upgrade --install harbor harbor/harbor --wait \
 --namespace=harbor \
 --version=1.1.3 \
 -f values.yaml
-8) 
+8) создаем chart socks-shop
+helm create kubernetes-templating/socks-shop
+helm upgrade --install socks-shop kubernetes-templating/socks-shop --namespace=socks-shop
+9) выносим frontend в отдельный chart
+helm create kubernetes-templating/frontend
+helm upgrade --install socks-shop kubernetes-templating/frontend --namespace=socks-shop
+10) переустанавливаем chart socks-shop
+helm upgrade --install socks-shop kubernetes-templating/socks-shop --namespace=socks-shop
