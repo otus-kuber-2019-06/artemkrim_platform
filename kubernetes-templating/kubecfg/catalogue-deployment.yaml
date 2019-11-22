@@ -2,32 +2,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: front-end
+  name: catalogue
+  labels:
+    name: catalogue
 spec:
-  replicas: {{ .Values.replicas }}
+  replicas: 1
   selector:
     matchLabels:
-      name: front-end
+      name: catalogue
   template:
     metadata:
       labels:
-        name: front-end
+        name: catalogue
     spec:
       containers:
-      - name: front-end
-        image: weaveworksdemos/front-end:{{ .Values.image.tag }}
-        resources:
-          requests:
-            cpu: 100m
-            memory: 100Mi
+      - name: catalogue
+        image: weaveworksdemos/catalogue:0.3.5
         ports:
-        - containerPort: 8079
+        - containerPort: 80
         securityContext:
           runAsNonRoot: true
           runAsUser: 10001
           capabilities:
             drop:
               - all
+            add:
+              - NET_BIND_SERVICE
           readOnlyRootFilesystem: true
       nodeSelector:
         node.kubernetes.io/node: ""

@@ -6,8 +6,12 @@ metadata:
   labels:
     name: front-end
 spec:
+  type: {{ .Values.service.type }}
   ports:
-  - port: 80
-    targetPort: 8079
+  - port: {{ .Values.service.port }}
+    targetPort: {{ .Values.service.targetPort }}
+    {{- if (eq "NodePort" .Values.service.type) }}
+    nodePort: {{ .Values.service.NodePort }}
+    {{- end }}
   selector:
     name: front-end

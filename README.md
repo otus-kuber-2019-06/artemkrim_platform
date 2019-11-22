@@ -169,3 +169,7 @@ helm create kubernetes-templating/frontend
 helm upgrade --install socks-shop kubernetes-templating/frontend --namespace=socks-shop
 10) переустанавливаем chart socks-shop
 helm upgrade --install socks-shop kubernetes-templating/socks-shop --namespace=socks-shop
+11) шаблонизируем fronend
+12) создаем зависимость 
+13) шаблонизируем с помощью kubecfg
+14) шаблонизируем с помощью kustomize
