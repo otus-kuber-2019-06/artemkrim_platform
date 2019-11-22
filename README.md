@@ -172,4 +172,4 @@ helm upgrade --install socks-shop kubernetes-templating/socks-shop --namespace=s
 11) шаблонизируем fronend\
 12) создаем зависимость \
 13) шаблонизируем с помощью kubecfg\
-14) шаблонизируем с помощью kustomize\
+14) шаблонизируем с помощью kustomize
