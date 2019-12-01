@@ -112,3 +112,64 @@ backup-mysql-instance-job    1/1           3s         72s
 |  1 | some data   |
 |  2 | some data-2 |
 +----+-------------+
+
+ДЗ #10 kubernetes-templating
+Кластер развернут с помощью kubespray \
+v1.16.2\
+3-master\
+2-worker\
+2-ingress(VRRP)\
+
+1) helm 2.14.3 установлен kubespray, инициализируем tiller
+kubectl apply -f tiller.yaml\
+helm init --service-account=tiller\
+2) устанавливаем nginx-ingress с помощью helm
+```
+helm install --name=nginx-ingress stable/nginx-ingress --version 1.24.2 \
+--namespace=ingress-nginx \
+--set controller.kind=DaemonSet \
+--set controller.service.type="" \
+--set controller.daemonset.useHostPort=true \
+--set controller.daemonset.hostPorts.http=80 \
+--set controller.daemonset.hostPorts.https=443 \
+--set controller.nodeSelector."node\.kubernetes\.io/ingress"="" \
+--set defaultBackend.nodeSelector."node\.kubernetes\.io/ingress"="" \
+--set defaultBackend.replicaCount=2
+3) устанавливаем cert-manager
+```
+kubectl create namespace cert-manager
+kubectl apply --validate=false -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.11/deploy/manifests/00-crds.yaml
+helm repo add jetstack https://charts.jetstack.io
+helm upgrade --install cert-manager jetstack/cert-manager --version=0.11.0 \
+--namespace=cert-manager \
+--set nodeSelector."node\.kubernetes\.io/ingress"=""
+kubectl apply -f ClusterIssuer.yaml
+4) устанавливаем плагин helm-tiller
+5) попробовали установить чарт в secret, затем в configMap
+export HELM_TILLER_STORAGE=configmap
+```
+helm tiller run \
+helm upgrade --install chartmuseum stable/chartmuseum --wait \
+--namespace=chartmuseum \
+--version=2.4.0 \
+-f values.yaml
+6) установка helm3 \
+version.BuildInfo{Version:"v3.0.0-rc.1", GitCommit:"ee77ae3d40fd599445ebd99b8fc04e2c86ca366c", GitTreeState:"clean", GoVersion:"go1.13.3"} \
+7) устанавливаем harbor \
+kubectl create ns harbor \
+helm3 upgrade --install harbor harbor/harbor --wait \
+--namespace=harbor \
+--version=1.1.3 \
+-f values.yaml \
+8) создаем chart socks-shop\
+helm create kubernetes-templating/socks-shop\
+helm upgrade --install socks-shop kubernetes-templating/socks-shop --namespace=socks-shop\
+9) выносим frontend в отдельный chart\
+helm create kubernetes-templating/frontend\
+helm upgrade --install socks-shop kubernetes-templating/frontend --namespace=socks-shop\
+10) переустанавливаем chart socks-shop\
+helm upgrade --install socks-shop kubernetes-templating/socks-shop --namespace=socks-shop\
+11) шаблонизируем fronend\
+12) создаем зависимость \
+13) шаблонизируем с помощью kubecfg\
+14) шаблонизируем с помощью kustomize
