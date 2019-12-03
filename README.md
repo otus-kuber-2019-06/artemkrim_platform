@@ -173,3 +173,101 @@ helm upgrade --install socks-shop kubernetes-templating/socks-shop --namespace=s
 12) создаем зависимость \
 13) шаблонизируем с помощью kubecfg\
 14) шаблонизируем с помощью kustomize
+
+ДЗ #11 kubernetes-vault 
+1) установка consul \
+```
+git clone https://github.com/hashicorp/consul-helm.git
+helm install --name=consul consul-helm
+2) установка vault \
+```
+git clone https://github.com/hashicorp/vault-helm.git
+edit values.yaml
+helm install --name=vault vault-helm -f vault-helm/values.yaml
+```
+```
+root@m1:/home/smile# kubectl logs vault-0
+==> Vault server configuration:
+
+             Api Address: http://10.233.65.187:8200
+                     Cgo: disabled
+         Cluster Address: https://10.233.65.187:8201
+              Listener 1: tcp (addr: "[::]:8200", cluster address: "[::]:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: info
+                   Mlock: supported: true, enabled: false
+                 Storage: consul (HA available)
+                 Version: Vault v1.2.4
+
+==> Vault server started! Log data will stream in below:
+
+2019-12-03T12:27:06.228Z [INFO]  proxy environment: http_proxy= https_proxy= no_proxy=
+2019-12-03T12:27:06.228Z [WARN]  storage.consul: appending trailing forward slash to path
+2019-12-03T12:27:13.925Z [INFO]  core: seal configuration missing, not initialized
+2019-12-03T12:27:16.960Z [INFO]  core: seal configuration missing, not initialized
+2019-12-03T12:27:19.942Z [INFO]  core: seal configuration missing, not initialized
+```
+```
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault operator init --key-shares=1 --key-threshold=1
+Unseal Key 1: 5jHBUv53Qs/4v2n/3FBhfvlt+4tHm3oSrCc7FGLd3+8=
+
+Initial Root Token: s.BOnsD5LlxqJl3iObVUOwAM4P
+
+Vault initialized with 1 key shares and a key threshold of 1. Please securely
+distribute the key shares printed above. When the Vault is re-sealed,
+restarted, or stopped, you must supply at least 1 of these keys to unseal it
+before it can start servicing requests.
+
+Vault does not store the generated master key. Without at least 1 key to
+reconstruct the master key, Vault will remain permanently sealed!
+
+It is possible to generate new unseal keys, provided you have a quorum of
+existing unseal keys shares. See "vault operator rekey" for more information.
+```
+```
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault status
+Key                Value
+---                -----
+Seal Type          shamir
+Initialized        true
+Sealed             true
+Total Shares       1
+Threshold          1
+Unseal Progress    0/1
+Unseal Nonce       n/a
+Version            1.2.4
+HA Enabled         true
+
+3) распечатывает каждый под\
+```
+kubectl exec -it vault-0 -- vault operator unseal '5jHBUv53Qs/4v2n/3FBhfvlt+4tHm3oSrCc7FGLd3+8='
+kubectl exec -it vault-0 -- vault operator unseal '5jHBUv53Qs/4v2n/3FBhfvlt+4tHm3oSrCc7FGLd3+8='
+kubectl exec -it vault-0 -- vault operator unseal '5jHBUv53Qs/4v2n/3FBhfvlt+4tHm3oSrCc7FGLd3+8='
+==> v1/Pod(related)
+NAME     READY  STATUS   RESTARTS  AGE
+vault-0  1/1    Running  0         27m
+vault-1  1/1    Running  0         27m
+vault-2  1/1    Running  0         27m
+4) авторизация
+```
+kubectl exec -it vault-0 -- vault login
+
+Success! You are now authenticated. The token information displayed below
+is already stored in the token helper. You do NOT need to run "vault login"
+again. Future Vault requests will automatically use this token.
+
+Key                  Value
+---                  -----
+token                s.BOnsD5LlxqJl3iObVUOwAM4P
+token_accessor       zTLIx7uRzJAPPNkD0UYG1q8h
+token_duration       ∞
+token_renewable      false
+token_policies       ["root"]
+identity_policies    []
+policies             ["root"]
+```
+```
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault auth list
+Path      Type     Accessor               Description
+----      ----     --------               -----------
+token/    token    auth_token_20e5d595    token based credentials
+```
