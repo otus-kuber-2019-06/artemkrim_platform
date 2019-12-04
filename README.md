@@ -362,3 +362,8 @@ TOKEN=$(curl --request POST --data '{"jwt": "'$KUBE_TOKEN'", "role": "otus"}' $V
 git clone https://github.com/hashicorp/vault-guides.git
 cd vault-guides/identity/vault-agent-k8s-demo
 ```
+```
+kubectl create configmap example-vault-agent-config --from-file=./configs-k8s/
+kubectl get configmap example-vault-agent-config -o yaml
+kubectl apply -f example-k8s-spec.yml --record
+```
