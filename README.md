@@ -270,4 +270,33 @@ root@m1:/home/smile# kubectl exec -it vault-0 -- vault auth list
 Path      Type     Accessor               Description
 ----      ----     --------               -----------
 token/    token    auth_token_20e5d595    token based credentials
+5) заводим секреты
+```
+kubectl exec -it vault-0 -- vault secrets enable --path=otus kv
+kubectl exec -it vault-0 -- vault secrets list --detailed
+kubectl exec -it vault-0 -- vault kv put otus/otus-ro/config username='otus' password='asajkjkahs'
+kubectl exec -it vault-0 -- vault kv put otus/otus-rw/config username='otus' password='asajkjkahs'
+```
+```
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault read otus/otus-ro/config
+Key                 Value
+---                 -----
+refresh_interval    768h
+username            otus
+```
+```
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault kv get otus/otus-rw/config
+====== Data ======
+Key         Value
+---         -----
+username    otus
+6) включаем авторизацию k8s
+```
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault auth enable kubernetes
+Success! Enabled kubernetes auth method at: kubernetes/
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault auth list
+Path           Type          Accessor                    Description
+----           ----          --------                    -----------
+kubernetes/    kubernetes    auth_kubernetes_411a5f6d    n/a
+token/         token         auth_token_20e5d595         token based credentials
 ```
