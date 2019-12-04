@@ -399,6 +399,7 @@ kubectl exec -it vault-0 -- vault write pki_int/intermediate/set-signed certific
 ```
 kubectl exec -it vault-0 -- vault write pki_int/roles/example-dot-ru allowed_domains="example.ru" allow_subdomains=true max_ttl="720h"
 ```
+```
 root@m1:/home/smile# kubectl exec -it vault-0 -- vault write pki_int/issue/example-dot-ru common_name="gitlab.example.ru" ttl="24h"
 Key                 Value
 ---                 -----
