@@ -299,4 +299,66 @@ Path           Type          Accessor                    Description
 ----           ----          --------                    -----------
 kubernetes/    kubernetes    auth_kubernetes_411a5f6d    n/a
 token/         token         auth_token_20e5d595         token based credentials
+7) создаем sa vault-auth
+```
+kubectl create serviceaccount vault-auth
+kubectl apply --filename vault-auth-service-account.yml
+8) подготавливаем переменные
+```
+export VAULT_SA_NAME=$(kubectl get sa vault-auth -o jsonpath="{.secrets[*]['name']}")
+export SA_JWT_TOKEN=$(kubectl get secret $VAULT_SA_NAME -o jsonpath="{.data.token}" |base64 --decode; echo)
+export SA_CA_CRT=$(kubectl get secret $VAULT_SA_NAME -o jsonpath="{.data['ca\.crt']}" |base64 --decode; echo)
+export K8S_HOST=$(more ~/.kube/config | grep server |awk '/http/ {print $NF}')
+9) запись конфига
+```
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault write auth/kubernetes/config token_reviewer_jwt="$SA_JWT_TOKEN" kubernetes_host="$K8S_HOST" kubernetes_ca_cert="$SA_CA_CRT"
+Success! Data written to: auth/kubernetes/config
+10) подготавливаем роль и политики
+```
+root@m1:/home/smile# kubectl cp otus-policy.hcl vault-0:/
+tar: can't open 'otus-policy.hcl': Permission denied
+command terminated with exit code 1
+```
+```
+kubectl cp otus-policy.hcl vault-0:/tmp
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault policy write otus-policy /tmp/otus-policy.hcl
+Success! Uploaded policy: otus-policy
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault write auth/kubernetes/role/otus bound_service_account_names=vault-auth  bound_service_account_namespaces=default policies=otus-policy ttl=24h
+Success! Data written to: auth/kubernetes/role/otus
+```
+10) проверка работы
+```
+kubectl run --generator=run-pod/v1 tmp --rm -i --tty --serviceaccount=vault-auth --image alpine:3.7
+apk add curl jq
+VAULT_ADDR=http://vault:8200
+KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+curl --request POST --data '{"jwt": "'$KUBE_TOKEN'", "role": "otus"}' $VAULT_ADDR/v1/auth/kubernetes/login | jq
+TOKEN=$(curl --request POST --data '{"jwt": "'$KUBE_TOKEN'", "role": "otus"}' $VAULT_ADDR/v1/auth/kubernetes/login | jq '.auth.client_token' | awk -F\" '{print $2}')
+```
+```
+/ # curl --header "X-Vault-Token:$TOKEN" $VAULT_ADDR/v1/otus/otus-ro/config
+{"request_id":"b2b21bdb-dc58-40ab-b44d-20134ab70a27","lease_id":"","renewable":false,"lease_duration":2764800,"data":{"username":"otus"},"wrap_info":null,"warnings":null,"auth":null}
+/ # curl --header "X-Vault-Token:$TOKEN" $VAULT_ADDR/v1/otus/otus-rw/config
+{"request_id":"949096da-6dc9-887f-03cb-9d7c555f5863","lease_id":"","renewable":false,"lease_duration":2764800,"data":{"username":"otus"},"wrap_info":null,"warnings":null,"auth":null}
+```
+/ # curl --request POST --data '{"bar": "baz"}'   --header "X-Vault-Token:$TOKEN" $VAULT_ADDR/v1/otus/otus-ro/config
+{"errors":["1 error occurred:\n\t* permission denied\n\n"]}
+/ # curl --request POST --data '{"bar": "baz"}'   --header "X-Vault-Token:$TOKEN" $VAULT_ADDR/v1/otus/otus-rw/config
+{"errors":["1 error occurred:\n\t* permission denied\n\n"]}
+/ # curl --request POST --data '{"bar": "baz"}'   --header "X-Vault-Token:$TOKEN" $VAULT_ADDR/v1/otus/otus-rw/config1
+```
+```
+/ # curl --header "X-Vault-Token:$TOKEN" $VAULT_ADDR/v1/otus/otus-rw/config1
+{"request_id":"58423984-e890-ae93-24b5-7367eeadac6f","lease_id":"","renewable":false,"lease_duration":2764800,"data":{"bar":"baz"},"wrap_info":null,"warnings":null,"auth":null}
+```
+# нет прав на запись в сconfig, редактируем политику
+```
+/ # curl --request POST --data '{"bar": "baz"}'   --header "X-Vault-Token:$TOKEN" $VAULT_ADDR/v1/otus/otus-rw/config
+/ # curl --header "X-Vault-Token:$TOKEN" $VAULT_ADDR/v1/otus/otus-rw/config
+{"request_id":"c5f5e022-dd30-d6aa-74de-64cdb67385b3","lease_id":"","renewable":false,"lease_duration":2764800,"data":{"bar":"baz"},"wrap_info":null,"warnings":null,"auth":null}
+```
+11) use case использования авторизации через кубер
+```
+git clone https://github.com/hashicorp/vault-guides.git
+cd vault-guides/identity/vault-agent-k8s-demo
 ```
