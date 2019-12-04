@@ -175,12 +175,12 @@ helm upgrade --install socks-shop kubernetes-templating/socks-shop --namespace=s
 14) шаблонизируем с помощью kustomize
 
 ДЗ #11 kubernetes-vault 
-1) установка consul \
+1) установка consul
 ```
 git clone https://github.com/hashicorp/consul-helm.git
 helm install --name=consul consul-helm
 ```
-2) установка vault \
+2) установка vault
 ```
 git clone https://github.com/hashicorp/vault-helm.git
 edit values.yaml
@@ -238,7 +238,7 @@ Unseal Nonce       n/a
 Version            1.2.4
 HA Enabled         true
 ```
-3) распечатывает каждый под\
+3) распечатывает каждый под
 ```
 kubectl exec -it vault-0 -- vault operator unseal '5jHBUv53Qs/4v2n/3FBhfvlt+4tHm3oSrCc7FGLd3+8='
 kubectl exec -it vault-0 -- vault operator unseal '5jHBUv53Qs/4v2n/3FBhfvlt+4tHm3oSrCc7FGLd3+8='
@@ -348,6 +348,7 @@ TOKEN=$(curl --request POST --data '{"jwt": "'$KUBE_TOKEN'", "role": "otus"}' $V
 {"request_id":"b2b21bdb-dc58-40ab-b44d-20134ab70a27","lease_id":"","renewable":false,"lease_duration":2764800,"data":{"username":"otus"},"wrap_info":null,"warnings":null,"auth":null}
 / # curl --header "X-Vault-Token:$TOKEN" $VAULT_ADDR/v1/otus/otus-rw/config
 {"request_id":"949096da-6dc9-887f-03cb-9d7c555f5863","lease_id":"","renewable":false,"lease_duration":2764800,"data":{"username":"otus"},"wrap_info":null,"warnings":null,"auth":null}
+```
 ```
 / # curl --request POST --data '{"bar": "baz"}'   --header "X-Vault-Token:$TOKEN" $VAULT_ADDR/v1/otus/otus-ro/config
 {"errors":["1 error occurred:\n\t* permission denied\n\n"]}
