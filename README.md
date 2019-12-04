@@ -179,6 +179,7 @@ helm upgrade --install socks-shop kubernetes-templating/socks-shop --namespace=s
 ```
 git clone https://github.com/hashicorp/consul-helm.git
 helm install --name=consul consul-helm
+```
 2) установка vault \
 ```
 git clone https://github.com/hashicorp/vault-helm.git
@@ -236,7 +237,7 @@ Unseal Progress    0/1
 Unseal Nonce       n/a
 Version            1.2.4
 HA Enabled         true
-
+```
 3) распечатывает каждый под\
 ```
 kubectl exec -it vault-0 -- vault operator unseal '5jHBUv53Qs/4v2n/3FBhfvlt+4tHm3oSrCc7FGLd3+8='
@@ -247,6 +248,7 @@ NAME     READY  STATUS   RESTARTS  AGE
 vault-0  1/1    Running  0         27m
 vault-1  1/1    Running  0         27m
 vault-2  1/1    Running  0         27m
+```
 4) авторизация
 ```
 kubectl exec -it vault-0 -- vault login
@@ -270,6 +272,7 @@ root@m1:/home/smile# kubectl exec -it vault-0 -- vault auth list
 Path      Type     Accessor               Description
 ----      ----     --------               -----------
 token/    token    auth_token_20e5d595    token based credentials
+```
 5) заводим секреты
 ```
 kubectl exec -it vault-0 -- vault secrets enable --path=otus kv
@@ -290,6 +293,7 @@ root@m1:/home/smile# kubectl exec -it vault-0 -- vault kv get otus/otus-rw/confi
 Key         Value
 ---         -----
 username    otus
+```
 6) включаем авторизацию k8s
 ```
 root@m1:/home/smile# kubectl exec -it vault-0 -- vault auth enable kubernetes
@@ -299,20 +303,24 @@ Path           Type          Accessor                    Description
 ----           ----          --------                    -----------
 kubernetes/    kubernetes    auth_kubernetes_411a5f6d    n/a
 token/         token         auth_token_20e5d595         token based credentials
+```
 7) создаем sa vault-auth
 ```
 kubectl create serviceaccount vault-auth
 kubectl apply --filename vault-auth-service-account.yml
+```
 8) подготавливаем переменные
 ```
 export VAULT_SA_NAME=$(kubectl get sa vault-auth -o jsonpath="{.secrets[*]['name']}")
 export SA_JWT_TOKEN=$(kubectl get secret $VAULT_SA_NAME -o jsonpath="{.data.token}" |base64 --decode; echo)
 export SA_CA_CRT=$(kubectl get secret $VAULT_SA_NAME -o jsonpath="{.data['ca\.crt']}" |base64 --decode; echo)
 export K8S_HOST=$(more ~/.kube/config | grep server |awk '/http/ {print $NF}')
+```
 9) запись конфига
 ```
 root@m1:/home/smile# kubectl exec -it vault-0 -- vault write auth/kubernetes/config token_reviewer_jwt="$SA_JWT_TOKEN" kubernetes_host="$K8S_HOST" kubernetes_ca_cert="$SA_CA_CRT"
 Success! Data written to: auth/kubernetes/config
+```
 10) подготавливаем роль и политики
 ```
 root@m1:/home/smile# kubectl cp otus-policy.hcl vault-0:/
