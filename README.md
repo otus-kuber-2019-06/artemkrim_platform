@@ -367,3 +367,132 @@ kubectl create configmap example-vault-agent-config --from-file=./configs-k8s/
 kubectl get configmap example-vault-agent-config -o yaml
 kubectl apply -f example-k8s-spec.yml --record
 ```
+12) ca на базе vault
+```
+kubectl exec -it vault-0 -- vault secrets enable pki
+kubectl exec -it vault-0 -- vault secrets tune -max-lease-ttl=87600h pki
+kubectl exec -it vault-0 -- vault write -field=certificate pki/root/generate/internal common_name="exmaple.ru" ttl=87600h > CA_cert.crt
+```
+```
+kubectl exec -it vault-0 -- vault write pki/config/urls issuing_certificates="http://vault:8200/v1/pki/ca" crl_distribution_points="http://vault:8200/v1/pki/crl"
+```
+```
+kubectl exec -it vault-0 -- vault secrets enable --path=pki_int pki
+kubectl exec -it vault-0 -- vault secrets tune -max-lease-ttl=87600h pki_int
+kubectl exec -it vault-0 -- vault write -format=json pki_int/intermediate/generate/internal common_name="example.ru Intermediate Authority" | jq -r '.data.csr' > pki_intermediate.csr
+```
+```
+kubectl cp pki_intermediate.csr vault-0:/home/vault/
+kubectl exec -it vault-0 -- vault write -format=json pki/root/sign-intermediate csr=@/home/vault/pki_intermediate.csr format=pem_bundle ttl="43800h" | jq -r '.data.certificate' > intermediate.cert.pem
+kubectl cp intermediate.cert.pem vault-0:/home/vault/
+kubectl exec -it vault-0 -- vault write pki_int/intermediate/set-signed certificate=@/home/vault/intermediate.cert.pem
+```
+```
+kubectl exec -it vault-0 -- vault write pki_int/roles/example-dot-ru allowed_domains="example.ru" allow_subdomains=true max_ttl="720h"
+```
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault write pki_int/issue/example-dot-ru common_name="gitlab.example.ru" ttl="24h"
+Key                 Value
+---                 -----
+ca_chain            [-----BEGIN CERTIFICATE-----
+MIIDnDCCAoSgAwIBAgIUS2Hq+a6hHbPojZQdk2Ge/ETepyUwDQYJKoZIhvcNAQEL
+BQAwFTETMBEGA1UEAxMKZXhtYXBsZS5ydTAeFw0xOTEyMDQxMjQ3NDVaFw0yNDEy
+MDIxMjQ4MTVaMCwxKjAoBgNVBAMTIWV4YW1wbGUucnUgSW50ZXJtZWRpYXRlIEF1
+dGhvcml0eTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMV4p1Sq1nXc
+j1LnOyfEXTVf2PIr8/Gs/lVqV5JtDKcXIjoCvax13+PkDuFkeJK58JiR0Ix5Syd3
+HQwR/LRsFxfK9adOv7Un2PTzxuy8K5YA+psE6A3Hj2rfzQFJuF3KmqPDn2BR2fNy
+6LtB/kpoB6XJCBn1Wj268VjN5LqfEVuvHlbyzknc3den5niJdct+qPJOY2ALfzH1
+sIIV+UXvornd+JWDZwG04gHoPIgRJ3VN/YlxbbJ4B/mJsoFLqaIFx0jD3bAtNWMX
+AzOsvd7Q1xEKkB9l9F7pqTKoNVUAT0r7bWYhgXIN35rtWE4/2S3botvYuK4/Ixvp
+VpAj/20/GIUCAwEAAaOBzDCByTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUw
+AwEB/zAdBgNVHQ4EFgQUy1wRotq1X5kWLoJbhZ7OPSPuq/0wHwYDVR0jBBgwFoAU
+RNf5MQNFAuLVj9pPUy0TYYO4ReswNwYIKwYBBQUHAQEEKzApMCcGCCsGAQUFBzAC
+hhtodHRwOi8vdmF1bHQ6ODIwMC92MS9wa2kvY2EwLQYDVR0fBCYwJDAioCCgHoYc
+aHR0cDovL3ZhdWx0OjgyMDAvdjEvcGtpL2NybDANBgkqhkiG9w0BAQsFAAOCAQEA
+fJPivm+7AENWGT5Jq1QCQtR+XYz1wZtGXmArYlG8Vtm1ndnxQ15ROCBL0+pm1nHl
+KT+YiMp30MOstbBIyPVNZ3Y8Sbf/+tYmBBYbI4FsD/H4VRNjMdbgHCjI+KCv+NjT
+GnFRWstiY8rK6bBf4ZKWH53+HsSWQtxU7tOvnWRHwQcNQizoON9p+4Jv0dmI0axW
+wMek78RhxOevis4jCzeCoiKsMSGgK/Yqa7ooHVVAJ/zGvB1K+HGR+nOmQ+tCGJMB
+66CJn0pnQR+N87ZWJt1d9GPU++lwrQXPrcS7JstQ4LlEDp2r7IFUZhMgu0zDVQCW
+mWC9s+kAFobQlb/YWojlkw==
+-----END CERTIFICATE-----]
+certificate         -----BEGIN CERTIFICATE-----
+MIIDZzCCAk+gAwIBAgIUSJ9iOESAlzq48YXlSbjFu8QFT+gwDQYJKoZIhvcNAQEL
+BQAwLDEqMCgGA1UEAxMhZXhhbXBsZS5ydSBJbnRlcm1lZGlhdGUgQXV0aG9yaXR5
+MB4XDTE5MTIwNDEyNTEzN1oXDTE5MTIwNTEyNTIwNlowHDEaMBgGA1UEAxMRZ2l0
+bGFiLmV4YW1wbGUucnUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQD7
+j1P16xfD8es5Mkkh6mhSSx0rvp00IVt7AfmvS98rb3TUbuoW8VBSi78TIYcbehlm
+qMVT6UYh84c+BpAB8RndxMz8S1GMamVDDjICV5xUq4AUCG89EmfToDdyGVPWsKO8
+dnoRQzkQWZ6/62woCFqlL8Tm//Jgid9uj3os++F2VR4O3+/IBQ4+59cnVBKXIwiR
+1ghl9EH1PlGhZqzoj8h8kLqDqEQQQ8ya1TCkbmcU1korpN2bnygqFvHZtU+Z8D40
+CDO0etSBdC18IdXuulqgb8QBpBGQ03cHlDTXOn3KXawIA/l/fe9LFbPe4CTlEYVy
++mDEasfHMTqvkLSmJgtDAgMBAAGjgZAwgY0wDgYDVR0PAQH/BAQDAgOoMB0GA1Ud
+JQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjAdBgNVHQ4EFgQUtYM1AbstdWzXlbQc
+KQeb/qcFJigwHwYDVR0jBBgwFoAUy1wRotq1X5kWLoJbhZ7OPSPuq/0wHAYDVR0R
+BBUwE4IRZ2l0bGFiLmV4YW1wbGUucnUwDQYJKoZIhvcNAQELBQADggEBADRhT87L
+NVO0tuLRs/p2TYIPYH4r6JuennXX2/CskgQ/5W+CKu3Kwd2//FBMj9qLxenDIk1F
+BZoJYxzlSCPACb6NIGs+lQTzdKHR1/ldYEOPom+YGbVo/UAjkOmatOfYJIgQxvVz
+BL5SKZSjm2oGXLIFHyIvuMQbzYId+LLlIEFTphBSzg47oD0XSVLg6sZq7RkSEwEK
+1GYbHVCkmF3KltLP/+a5FVsCc6/1zDRsi75WT8PGpib2lQFJ6ZOqrFmpjEY+k19I
+A45g7r+9hJws0kQY0H6wDPcE+/QxdDhzJmiwjdHmJK0x3MaRIZSwKXu+X4zIlHU9
+LWYiiAvIgsJowhQ=
+-----END CERTIFICATE-----
+expiration          1575550326
+issuing_ca          -----BEGIN CERTIFICATE-----
+MIIDnDCCAoSgAwIBAgIUS2Hq+a6hHbPojZQdk2Ge/ETepyUwDQYJKoZIhvcNAQEL
+BQAwFTETMBEGA1UEAxMKZXhtYXBsZS5ydTAeFw0xOTEyMDQxMjQ3NDVaFw0yNDEy
+MDIxMjQ4MTVaMCwxKjAoBgNVBAMTIWV4YW1wbGUucnUgSW50ZXJtZWRpYXRlIEF1
+dGhvcml0eTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMV4p1Sq1nXc
+j1LnOyfEXTVf2PIr8/Gs/lVqV5JtDKcXIjoCvax13+PkDuFkeJK58JiR0Ix5Syd3
+HQwR/LRsFxfK9adOv7Un2PTzxuy8K5YA+psE6A3Hj2rfzQFJuF3KmqPDn2BR2fNy
+6LtB/kpoB6XJCBn1Wj268VjN5LqfEVuvHlbyzknc3den5niJdct+qPJOY2ALfzH1
+sIIV+UXvornd+JWDZwG04gHoPIgRJ3VN/YlxbbJ4B/mJsoFLqaIFx0jD3bAtNWMX
+AzOsvd7Q1xEKkB9l9F7pqTKoNVUAT0r7bWYhgXIN35rtWE4/2S3botvYuK4/Ixvp
+VpAj/20/GIUCAwEAAaOBzDCByTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUw
+AwEB/zAdBgNVHQ4EFgQUy1wRotq1X5kWLoJbhZ7OPSPuq/0wHwYDVR0jBBgwFoAU
+RNf5MQNFAuLVj9pPUy0TYYO4ReswNwYIKwYBBQUHAQEEKzApMCcGCCsGAQUFBzAC
+hhtodHRwOi8vdmF1bHQ6ODIwMC92MS9wa2kvY2EwLQYDVR0fBCYwJDAioCCgHoYc
+aHR0cDovL3ZhdWx0OjgyMDAvdjEvcGtpL2NybDANBgkqhkiG9w0BAQsFAAOCAQEA
+fJPivm+7AENWGT5Jq1QCQtR+XYz1wZtGXmArYlG8Vtm1ndnxQ15ROCBL0+pm1nHl
+KT+YiMp30MOstbBIyPVNZ3Y8Sbf/+tYmBBYbI4FsD/H4VRNjMdbgHCjI+KCv+NjT
+GnFRWstiY8rK6bBf4ZKWH53+HsSWQtxU7tOvnWRHwQcNQizoON9p+4Jv0dmI0axW
+wMek78RhxOevis4jCzeCoiKsMSGgK/Yqa7ooHVVAJ/zGvB1K+HGR+nOmQ+tCGJMB
+66CJn0pnQR+N87ZWJt1d9GPU++lwrQXPrcS7JstQ4LlEDp2r7IFUZhMgu0zDVQCW
+mWC9s+kAFobQlb/YWojlkw==
+-----END CERTIFICATE-----
+private_key         -----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA+49T9esXw/HrOTJJIepoUksdK76dNCFbewH5r0vfK2901G7q
+FvFQUou/EyGHG3oZZqjFU+lGIfOHPgaQAfEZ3cTM/EtRjGplQw4yAlecVKuAFAhv
+PRJn06A3chlT1rCjvHZ6EUM5EFmev+tsKAhapS/E5v/yYInfbo96LPvhdlUeDt/v
+yAUOPufXJ1QSlyMIkdYIZfRB9T5RoWas6I/IfJC6g6hEEEPMmtUwpG5nFNZKK6Td
+m58oKhbx2bVPmfA+NAgztHrUgXQtfCHV7rpaoG/EAaQRkNN3B5Q01zp9yl2sCAP5
+f33vSxWz3uAk5RGFcvpgxGrHxzE6r5C0piYLQwIDAQABAoIBAQCXchdrAsjA94DU
+Y1ix6Ww6tuvt7Qi5XKe1a2AFT9kgTi54wfl+LHNd7rHu841iVmS6cDq0JMlLIVC3
+X74M3TjkUVnTPgjvTxJ9hytGS7ZbJxCpftZxXwZQ2rDmqSbXJmq8yFr+z4ioNjwj
+cLkhdL4VmqehJk+mHPr9lbVJJa77zFsH0+nuNJCxEx3I1jXgBhgTacr5OkEKpLGA
+HkMd27RPS1CJDywkf3os1fFlsKbMQimMTDjvJ8ZfFKXn+YgBKmFYmNlZ9AJTy697
+OjQ3b2w45mL22WDapG+HAsWYnciVleevVso0XhJdiWRZYaX71Jp8r2pXuruEDU4R
+D7XRONUBAoGBAPywDM1D1B6AqvnKijjTPr0A6KOTT+lLrsmcxUsnmyLxuKYlmpRB
+dqfBgoWUUVoxnLmmnne8LQgPtw/EeOlOAafWWysmad2qoFGO1CzDvFk88WvXQ8c0
+IjhvRon6+84k39AG/p3TDMu5nLnOr0/eosC7Ed1l60qB9jR2ZzqFtUrDAoGBAP7b
+fkmbtVo/AgQKRoVN2txCv9e9I09H4SQ78Gi6XVYB6/Rj3nTS6TVad6TlFQIPHNkd
+ivyq2kltuXZOd6HjWXELdcdLvU0IS4ra297rk66iKTyj44U34BH6Tw1QF8YbXqr5
+3HOgtYjyFHqI/ev3C3y/REjz/YgP4lIQWfWOWzWBAoGAN5oxpvVW9sNPXBniYnCx
+bHuHtX7T5b0eoAScMVZsv7q66+x4YEkrZ+yf4O7rG9Kw7vUoB6bjrdNvb8vG42ej
+25/CffM89mb2UhwAujzz9BsB8L30jx/8q7hoqDIPOKRKj4cKfgYT2bxlLUm6r/OI
+kqpXWwVzSfjhCVhIjMshQmsCgYBVXbAvd7iHQhOqxsZYYHuuy6z21qO9KpZ/TJR6
+f/JDnOEsO0eIWh1DgcoRsaoXxngjQYIMoC396oL03dO0pjKPawdIelYuN1kWabi8
+MqyFEkw9w6eyN8UWQIG6M9nCwegz3P26vVoRRQUXBkwHffibEHYO+asyqB9m3ZNE
+bSqgAQKBgQD4Wzlk5+ol9dL1ci6euD2evuIAu1WfUy87fGerTsx5kU1TwW2baGAH
+hhl4NB3V7FqCxP5o5TwO1DQQvV1HbCrrEJpvX4q7hN4A7ZSN5xex7ENeHNShhecp
+rz1wCJBRG5wD+iuyXBbdmy9/dA1uNFf5MSAs/zvzzO9aWIu6IdloQg==
+-----END RSA PRIVATE KEY-----
+private_key_type    rsa
+serial_number       48:9f:62:38:44:80:97:3a:b8:f1:85:e5:49:b8:c5:bb:c4:05:4f:e8
+```
+```
+root@m1:/home/smile# kubectl exec -it vault-0 -- vault write pki_int/revoke serial_number="48:9f:62:38:44:80:97:3a:b8:f1:85:e5:49:b8:c5:bb:c4:05:4f:e8"
+Key                        Value
+---                        -----
+revocation_time            1575463984
+revocation_time_rfc3339    2019-12-04T12:53:04.045630977Z
+```
